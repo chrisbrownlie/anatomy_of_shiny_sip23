@@ -24,7 +24,7 @@ format:
 ## It is a weird title
 
 - Anatomy of a shiny app AKA a high level look at the {shiny} source code
-- This will be theoretical, but bear with me
+- This will be theoretical, but bear with me - it will be worth it!
 - What I won't be talking about:
   - javascript & websockets
   - UI design
@@ -196,8 +196,8 @@ be invalidated if the value ever changes
 - User-dependent (mostly):
   - ReactiveVal (`reactiveVal()`)
   - ReactiveValues (`reactiveValues()`)
-  - Observable (`reactive()`)
   - Observers (`observe()`, `observeEvent()`, `render_X()`)
+  - Observable (`reactive()`)
   
 :::{.notes}
 - The objects are created and used at different times throughout the lifecycle of a shiny app
@@ -215,7 +215,7 @@ where they are used implicitly or as defaults
   - i.e. ReactiveVal/ues vs Observable vs Observer
 - Overly reactive expressions
   - Understanding the reactive graph
-- Misunderstanding domains/modules
+- Misunderstanding modules
   - ShinySession, namespaces and input-output interactions
   
 :::{.notes}
