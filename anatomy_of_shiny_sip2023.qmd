@@ -1,0 +1,162 @@
+---
+title: "Anatomy of a Shiny app"
+subtitle: "Shiny in Production 2023"
+institute: "Barnett Waddingham"
+author: "Chris Brownlie"
+date: "2023-10-18"
+date-format: "Do MMM YYYY"
+format:
+  revealjs: 
+    theme: [dark, custom.scss]
+    footer: "Shiny in Production 2023"
+---
+
+## About me
+
+- Some info about me
+- 5 years with R & shiny
+- Consultant, Analytics, BW MDA building shiny apps etc.
+
+## Weird title, mate
+
+- Anatomy of a shiny app AKA a high level look at the {shiny} source code
+- This will be theoretical, but bear with me
+- The shadowy places (we don't go there):
+  - javascript & websockets
+  - UI design
+  - deployment/infrastructure
+  
+## What do you mean 'anatomy'?
+
+- Image of body
+ - Visible = UI
+ - Brain = Server
+ - Organs = {shiny} and friends
+ - (Nervous system = websockets)
+  
+  
+## My hopes and dreams (for this talk)
+
+- Help you build a better mental model of what goes on inside a shiny app
+- Put some of the {shiny} source code magic into a high-level digestible format
+- (ergo) Get better at developing production shiny apps the way they were meant to be built
+
+## Pre-requisite: R6
+
+- R6 is an R package, provides a method of OOP as R does not provide it by default
+- My quick simplified explanation for an R6 object, based on your R experience
+  - Beginner: think of it as a list, where some elements are functions
+  - Intermediate: think of it as an environment
+  - Advanced: you should know this already!
+  - (Pythonistas): think of it like a python object
+
+## [A subjective classification]{.smaller}
+
+![Shiny R6 classes](img/shiny_r6_classes2.png)
+
+## Stars of the show - [ShinySession]{.col-cyan}
+
+- You might know it as `session`
+- Contains instances of most helper/core helper classes
+- Important tasks
+  - Communicates with browser via websockets
+  - Handles outputs in the server
+  - Initiates and manages 'cycles'
+  
+:::{.notes}
+- For most shiny apps, the server is initiated with three arguments (input, output and session)
+- The session is an instance of ShinySession and when you interact with it via session$, you're calling a method of the ShinySession class
+- ShinySession is in some ways the overarching class, an instance can be thought of as the home/top level of the app
+- It stores a lot of different objects, using the helper classes and acting as a way to access those objects
+- Arguably the most important job it does for the use is manage websocket communications
+- Without the websocket communications, there would be no reactivity
+- Another important job is handling outputs
+- This involves converting what is provided via render functions into an observer that executes when its inputs
+are invalidated
+- This includes communicating with the browser that an output is recalculating and other stuff like making sure 
+it is named appropriately and easy to debug
+- It manages app (flush) cycles, which means the process of executing all necessary code e.g. after an input has changed
+- It keeps track of 'things that need to be done' and 'keep doing them until there isn't any more things to be done'
+- Also the 'gateway' to things like bookmarking, modules, file uploads etc.
+
+Qs?
+- What are input/output? input is an instance of ReactiveValues, output is a list of Observers
+:::
+
+## Stars of the show - [RLog]{.col-cyan}
+
+- Logs actions on the reactive graph
+- When things get invalidated etc.
+- An instance of this is initiated (rLog) when the package is loaded
+
+## Stars of the show - [ReactiveVal]{.col-cyan}
+
+- AKA `reactiveVal()`
+- Keep track of value, label and dependents
+- Allow ‘freezing’ and ‘thawing’ via interaction with rLog
+- Methods for $get (`rv ← reactiveVal(4); rv()`)
+- Method for $set (`rv(10)`)
+
+## Stars of the show - [Observer]{.col-cyan}
+
+- AKA `observe()`/`observeEvent()`
+- Initialised with a function, creates a context in the supplied domain that is immediately invalidated
+- When invalidated, run any callbacks and add pending flush
+- When flushed, run the supplied function
+
+## Important topic - [Context]{.col-cyan}
+
+- Context: Creates a reactive domain which can be invalidated
+- ReactiveEnvironment: Level above Context, allows running things within a certain context
+- PriorityQueue: like a regular queue/data stack, but elements have priority associated with them
+  - How a ReactiveEnvironment determines which callbacks to execute first
+
+## When are they used
+
+- On load: RLog, TimerCallbacks, HandlerManager
+- In `runApp()`:
+  - ShinySession
+  - Bookmarking (RestoreContext etc.)
+- In the app event loop:
+  - TimerCallbacks
+  - ReactiveEnvironment
+  - Core Helpers (Callbacks, Dependents, PriorityQueue)
+
+## What is the point of all this?
+
+- Some common design mistakes
+- reactive vs observe
+  - i.e. Observable vs Observer
+- Overly reactive expressions
+  - Understanding the reactive graph
+- Misunderstanding domains/modules
+  - ShinySession, namespaces and input-output interactions
+  
+:::{.notes}
+
+
+- Calling a module just creates a new child domain from the original session
+- Understand that it is a relatively simple hierarchy from the original ShinySession object
+:::
+
+## To conclude
+
+- 99% of us will never need to know about these objects, shiny has been designed that way to abstract away the complexity and make our lives easier as developers
+- But having a better mental model of what is going when you’re building an app can help you to make more thoughtful, conscious design choices and help you use shiny the way it was intended to be used
+- I believe this can help reduce the chances of bugs in production apps
+
+## Just for fun {.column-screen .smaller}
+
+My favourite comments from the {shiny} source code
+
+*(AKA shiny devs are like you and me, just better)*
+
+
+![](img/funny_comments/abusing_downloads.PNG)
+![](img/funny_comments/bunch_of_ugliness.PNG)
+![](img/funny_comments/horribly_inefficient.PNG)
+![](img/funny_comments/not_sure_why.PNG)
+![](img/funny_comments/pity_about_copy_paste.PNG)
+![](img/funny_comments/sob.PNG)
+![](img/funny_comments/super_paranoid.PNG)
+![](img/funny_comments/throw_yes_throw.PNG)
