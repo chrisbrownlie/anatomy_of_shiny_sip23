@@ -2,7 +2,7 @@
 
 Quarto (revealjs) slides for my talk 'Anatomy of a shiny app' at Shiny in Production conference, Newcastle on October 13th 2023.
 
-`index.html` contains the self-contained slides, also available at https://chrisbrownlie.github.io/anatomy_of_shiny_sip2023.
+`index.html` contains the self-contained slides, also available at https://chrisbrownlie.github.io/anatomy_of_shiny_sip23.
 The `img/` folder contains images and figures used in the presentation, as well as some that aren't.
 `custom.scss` contains custom Dracula-like styles for the presentation.
 

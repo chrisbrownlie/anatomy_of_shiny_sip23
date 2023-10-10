@@ -11,6 +11,7 @@ format:
     footer: "Shiny in Production 2023"
     embed-resources: true
     output-file: index.html
+    slide-number: true
 ---
 
 ## About me
