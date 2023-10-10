@@ -9,6 +9,8 @@ format:
   revealjs: 
     theme: [dark, custom.scss]
     footer: "Shiny in Production 2023"
+    embed-resources: true
+    output-file: index.html
 ---
 
 ## About me
@@ -88,6 +90,11 @@ Qs?
 - Logs actions on the reactive graph
 - When things get invalidated etc.
 - An instance of this is initiated (rLog) when the package is loaded
+
+:::{.notes}
+- It keeps a record of all reactive tasks that occur from when the shiny package is loaded
+- This includes creating
+:::
 
 ## Stars of the show - [ReactiveVal]{.col-cyan}
 
