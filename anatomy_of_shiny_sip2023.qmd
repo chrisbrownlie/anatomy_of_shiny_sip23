@@ -16,9 +16,9 @@ format:
 
 ## About me
 
-- 5 years with R & shiny
+- Chris Brownlie
 - Analytics consultant @ Barnett Waddingham
-- Variety of solutions - shiny apps
+- 5 years with R & shiny
 - Expertise on {shiny} and processes
 
 ## It is a weird title
@@ -30,6 +30,13 @@ format:
   - UI design
   - deployment/infrastructure
   
+:::{.notes}
+- Title is anatomy...
+- What does that mean? Could also be called
+- Will be theoretical, in the middle. Reasoning will make more sense at end
+- Won't be talking about these points, although they are important
+:::
+  
 ## What do you mean 'anatomy'?
 
 - Visible = UI
@@ -37,21 +44,21 @@ format:
 - *Organs = {shiny} and friends*
  
 :::{.notes}
-- Can think of an app as a person
+- Analogy that helps, think of an app as a person
 - What we can see like the body shape, size etc. is the UI
 - Brain is like the server, which takes in information from the user and performs some task in response
 - The shiny package (and other packages) provide the 'organs' in this analogy
 - They are mostly hidden, aren't visibly responsible for anything that happens but the app wouldn't function without them
 - Using this analogy, developing an app is like designing a video game character
 - You can choose how they look and what their personality is, but you don't have to worry about designing their organs as its taken care of
-- (maybe tenuous) can indirectly interact with organs i.e. increase stamina -> bigger lungs, but you don't have to worry about how the lungs operate
+- Can indirectly interact with organs i.e. increase stamina -> bigger lungs, but you don't have to worry about how the lungs operate
 - Bonus: websockets are the nervous system (communication between server and UI)
 :::
   
 ## My hopes and dreams (for this talk)
 
 - Better mental model
-- De-magicify
+- De-magic-ify
 - Improve app design
 
 :::{.notes}
@@ -59,8 +66,8 @@ format:
 - Reason being it is very easy to build complex apps without ever thinking about how or why it works
 - {shiny} purposely abstracts away the complexity
 - But I think having a good mental model for how it 'actually works' can only be a good thing
-- Lots of people, especially those new to R and/or shiny will view it as magic
-- It is just clever coding and good design E.g. it kind of boils down to just a while(running) check_if_changes; if_yes_then_do_stuff; loop
+- Lots of people, especially those new to R and/or shiny will view it as magic, can be intimidating
+- It is just clever coding and good design, with a lot of moving parts
 - Hopefully the two points above will result in being able to build better apps, avoid common mistakes and design apps in a way more consistent with the {shiny} philosophy
 :::
 
@@ -83,6 +90,26 @@ format:
 ## [A subjective classification]{.smaller}
 
 ![Shiny R6 classes](img/shiny_r6_classes6.png)
+
+## When are they created
+
+- **On load**: RLog, TimerCallbacks, HandlerManager
+- **In `runApp()`**: [ShinySession]{.col-cyan}, Bookmarking classes
+- **In the app event loop**: [ReactiveEnvironment]{.col-cyan}, Core Helpers
+- **User-dependent** (mostly):
+  - [ReactiveVal]{.col-cyan} (`reactiveVal()`)
+  - [ReactiveValues]{.col-cyan} (`reactiveValues()`)
+  - [Observers]{.col-cyan} (`observe()`, `observeEvent()`, `render_X()`)
+  - [Observable]{.col-cyan} (`reactive()`)
+  
+:::{.notes}
+- The objects are created and used at different times throughout the lifecycle of a shiny app
+- Some are created when the package is loaded, these are stored in the hidden global environment that shiny uses
+- Others are only created once the app starts running, either on startup of the app or during the running of app itself
+- The event loop is where most of the actual 'reactivity' takes place
+- The classes with user-facing wrappers are mostly used by developers, although there are some places within the code
+where they are used implicitly or as defaults
+:::
 
 ## [ShinySession]{.col-cyan}
 
@@ -127,7 +154,6 @@ Qs?
 ## [ReactiveEnvironment]{.col-cyan} & [Context]{.col-cyan}
 
 - ReactiveEnvironment keeps track of Contexts
-- Context like a function with extra attributes
 - Contexts can be **invalidated** (notify the ReactiveEnvironment they need to be 'flushed')
 - Contexts can be **flushed** (the function is run)
 
@@ -177,35 +203,11 @@ be invalidated if the value ever changes
 - Notifies dependents
 
 :::{.notes}
-- More complicated than reactive values is a reactive expression
+- Observable objects are created with the reactive function
+- They convert their expression to a function in the same way an Observer does
 - It can both take in reactive objects and be used in other reactive expressions or consumers
 - In a way it combines ReactiveVals and Observers, because it notifies dependents when it changes
 - But it also watches for invalidation and reruns when invalidated
-:::
-
-## When are they used
-
-- On load: RLog, TimerCallbacks, HandlerManager
-- In `runApp()`:
-  - ShinySession
-  - Bookmarking (RestoreContext etc.)
-- In the app event loop:
-  - TimerCallbacks
-  - ReactiveEnvironment
-  - Core Helpers (Callbacks, Dependents, PriorityQueue)
-- User-dependent (mostly):
-  - ReactiveVal (`reactiveVal()`)
-  - ReactiveValues (`reactiveValues()`)
-  - Observers (`observe()`, `observeEvent()`, `render_X()`)
-  - Observable (`reactive()`)
-  
-:::{.notes}
-- The objects are created and used at different times throughout the lifecycle of a shiny app
-- Some are created when the package is loaded, these are stored in the hidden global environment that shiny uses
-- Others are only created once the app starts running, either on startup of the app or during the running of app itself
-- The event loop is where most of the actual 'reactivity' takes place
-- The classes with user-facing wrappers are mostly used by developers, although there are some places within the code
-where they are used implicitly or as defaults
 :::
 
 ## What is the point of all this?
@@ -221,7 +223,8 @@ where they are used implicitly or as defaults
 :::{.notes}
 - Understanding the difference between the three types of object (called reactive producers, consumers and expressions (or both) in some shiny documentation)
 - Can help to reduce incorrect usage, which is a common mistake for newer shiny developers
-- In particular, do other things need to know if this value changes? 
+- In particular, do other things need to know if this value changes?
+- Observer runs a function when invalidated, reactive recalculates and notifies dependents of a new value
 
 - Overly reactive expressions - note that Observers are invalidated every time something they depend on is invalidated
 - Can use things like `isolate` to remove the dependency on another object and avoid unnecessary invalidation
